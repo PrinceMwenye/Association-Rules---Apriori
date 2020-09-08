@@ -1,0 +1,84 @@
+# -*- coding: utf-8 -*-
+"""
+Created on Mon Sep  7 18:12:16 2020
+
+@author: Prince
+"""
+
+
+import pandas as pd
+import numpy as np
+import re
+data = pd.read_csv('ARL.csv')
+
+data = data[data['Year'] != 'Customer Total:']
+
+def acc_num(row):
+    if row['Year'] == 'Customer Number:':
+        return  row['Prd.']
+    else:
+        return np.NaN
+
+data['acc_num'] =  data.apply(lambda row: acc_num(row), axis = 1)   
+
+
+def acc_name(row):
+    if row['Year'] == 'Customer Number:':
+        return row['Date']
+    else:
+        return np.NaN
+        
+    
+data['Acc_name'] = data.apply(lambda row: acc_name(row), axis = 1)
+
+
+
+def prod_name(row):
+    if str(row['Year'])[3:4] == '/':
+        return row['Prd.']
+    else:
+        return np.NaN
+        
+data['Product_name'] = data.apply(lambda row: prod_name(row), axis = 1)   
+
+
+def prod_id(row):
+    if str(row['Year'])[3:4] == '/':
+        return row['Year']
+    else: 
+        return np.NaN
+    
+data['Product_num'] = data.apply(lambda row: prod_id(row), axis = 1)    
+    
+
+data.iloc[:, [-1,-2,-3,-4]] = data.iloc[:, [-1,-2,-3,-4]].fillna(method = 'ffill')
+
+trial = data[data['Year'] == '2020']
+trial = trial.drop(['Year', 'Prd.', 'Type', 'Cost of Sales', 'Percent'], axis = 1)
+
+products = trial[['Transaction Number',  'Product_num']]
+products = products.groupby('Transaction Number')
+jj = products.pivot(index = 'Transaction Number', columns = 'Product_num', values = 'Product_num')
+
+
+transactions = []
+for i in range(0,156):
+    transactions.append([str(jj.values[i,j]) for j in range(0,139) if i != 'nan'])
+
+
+transactions = [list(set(i)) for i in transactions if i != 'nan']
+for i in transactions:
+    i.remove('nan')
+
+        
+from apyori import apriori
+
+rules = apriori(transactions = transactions, 
+                min_support = 0.0384, 
+                min_confidence = 0.2, 
+                min_lift = 3,
+                min_length = 2,
+                max_length = 2)
+#min support = 3 days * 2 items/ num of transactions
+
+results = list(rules)
