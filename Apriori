@@ -1,6 +1,6 @@
 # -*- coding: utf-8 -*-
 """
-Created on Mon Sep  7 18:12:16 2020
+Created on Tue Sep  8 13:41:55 2020
 
 @author: Prince
 """
@@ -57,7 +57,7 @@ trial = data[data['Year'] == '2020']
 trial = trial.drop(['Year', 'Prd.', 'Type', 'Cost of Sales', 'Percent'], axis = 1)
 
 products = trial[['Transaction Number',  'Product_num']]
-products = products.groupby('Transaction Number')
+#products = products.groupby('Transaction Number')
 jj = products.pivot(index = 'Transaction Number', columns = 'Product_num', values = 'Product_num')
 
 
@@ -73,12 +73,29 @@ for i in transactions:
         
 from apyori import apriori
 
-rules = apriori(transactions = transactions, 
-                min_support = 0.0384, 
-                min_confidence = 0.2, 
-                min_lift = 3,
-                min_length = 2,
+
+rules = apriori(transactions, min_support = 0.00384,  #beware of min_support
+                min_confidence = 0.7, 
+                min_lift = 2,
+                min_length = 2, 
                 max_length = 2)
+
 #min support = 3 days * 2 items/ num of transactions
 
 results = list(rules)
+
+
+
+def inspect(results):
+    lhs = [tuple(result[2][0])[0] for result in results]
+    rhs = [tuple(result[2][0])[1] for result in results]
+    supports = [result[1] for result in list(results)]
+    confidence = [result[2][0][2] for result in list(results)]
+    lifts =  [result[2][0][3] for result in list(results)]
+    return list(zip(lhs,rhs,supports, confidence, lifts)) 
+
+   
+ar = pd.DataFrame(inspect(results), columns =['Left', 'Right', 'Support', 'Confidence', 'Lift'])
+ar = ar.sort_values(ascending = False, by = 'Lift')
+
+
