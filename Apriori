@@ -21,7 +21,7 @@ def acc_num(row: str) -> str:
     A function to get customer number from the .Prd column.
 
     :param row: a string representing a column name
-    :precondition: row is a string in the dataset
+    :precondition: row is a string representing dataset name
     :postcondition: when iterating through 'row' column, it returns the customer account number from the .Prd column if the
                     data value is 'Customer Number'. Otherwise, it returns a NaN value later used for querying.
     :postcondition: dataset is changed
@@ -43,7 +43,7 @@ def acc_name(row: str) -> int:
    A function to get customer name from the .Prd column.
 
    :param row: a string representing a column name
-   :precondition: row is a string in the dataset
+   :precondition: row is a string representing dataset name
    :postcondition: when iterating through 'row' column, it returns the customer account number from the .Prd column if the
                    data value is 'Customer Number'. Otherwise, it returns a NaN value later used for querying.
    :postcondition: dataset is changed
@@ -66,7 +66,7 @@ def prod_name(row: str) -> str:
    is a '/', then value in '.Prd' must be a product name
 
    :param row: a string representing a column name
-   :precondition: row is a string in the dataset
+   :precondition: row is a string representing dataset name
    :postcondition: dataset is changed
    :return: product name
 
@@ -87,7 +87,7 @@ def prod_id(row):
    is a '/', then value in 'Year' must be a product name
 
    :param row: a string representing a column name
-   :precondition: row is a string in the dataset
+   :precondition: row is a string representing dataset name
    :postcondition: dataset is changed
    :return: product id
     """
@@ -115,6 +115,7 @@ def credits(row: str) -> str:
     is a Credit Note. Otherwise, it's definitely and invoice.
 
     :param row: a string
+    :precondition: row is a string representing dataset name
     :postcondition: dataset is changed
     :return: a string
     """
