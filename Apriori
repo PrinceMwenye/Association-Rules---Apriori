@@ -8,17 +8,31 @@ Created on Tue Sep 15 14:57:50 2020
 
 import pandas as pd
 import numpy as np
-data = pd.read_csv('allsales.csv')  #from january 2016
+
+data = pd.read_csv('allsales.csv')  # from january 2016
 
 data = data[data['Year'] != 'Customer Total:']
 
+
 def acc_num(row):
+    """Retrieve account number from .Prd column.
+
+    A function to get customer number from the .Prd column.
+
+    :param row: a string representing a column name
+    :precondition: row is a string in the dataset
+    :postcondition: when iterating through 'row' column, it returns the customer account number from the .Prd column if the
+                    data value is 'Customer Number'. Otherwise, it returns a NaN value later used for querying.
+
+
+    """
     if row['Year'] == 'Customer Number:':
-        return  row['Prd.']
+        return row['Prd.']
     else:
         return np.NaN
 
-data['acc_num'] =  data.apply(lambda row: acc_num(row), axis = 1)   
+# apply function to dataset
+data['acc_num'] = data.apply(lambda row: acc_num(row), axis=1)
 
 
 def acc_name(row):
@@ -26,10 +40,9 @@ def acc_name(row):
         return row['Date']
     else:
         return np.NaN
-        
-    
-data['Acc_name'] = data.apply(lambda row: acc_name(row), axis = 1)
 
+
+data['Acc_name'] = data.apply(lambda row: acc_name(row), axis=1)
 
 
 def prod_name(row):
@@ -37,111 +50,102 @@ def prod_name(row):
         return row['Prd.']
     else:
         return np.NaN
-        
-data['Product_name'] = data.apply(lambda row: prod_name(row), axis = 1)   
+
+
+data['Product_name'] = data.apply(lambda row: prod_name(row), axis=1)
 
 
 def prod_id(row):
     if str(row['Year'])[3:4] == '/':
         return row['Year']
-    else: 
+    else:
         return np.NaN
-    
-data['Product_num'] = data.apply(lambda row: prod_id(row), axis = 1)    
-    
 
-data.iloc[:, [-1,-2,-3,-4]] = data.iloc[:, [-1,-2,-3,-4]].fillna(method = 'ffill')
 
-trial = data[(data['Year'] == '2020') | (data['Year'] == '2019') | (data['Year'] == '2018') | (data['Year'] == '2017') | (data['Year'] == '2016')]
-trial = trial.drop(['Year', 'Prd.', 'Type', 'Cost of Sales', 'Percent'], axis = 1)
+data['Product_num'] = data.apply(lambda row: prod_id(row), axis=1)
+
+data.iloc[:, [-1, -2, -3, -4]] = data.iloc[:, [-1, -2, -3, -4]].fillna(method='ffill')
+
+trial = data[
+    (data['Year'] == '2020') | (data['Year'] == '2019') | (data['Year'] == '2018') | (data['Year'] == '2017') | (
+                data['Year'] == '2016')]
+trial = trial.drop(['Year', 'Prd.', 'Type', 'Cost of Sales', 'Percent'], axis=1)
+
 
 def credits(row):
     if str(row['Transaction Number'])[0:2] == 'CN':
-        return 'credit' 
+        return 'credit'
     else:
         return 'invoice'
 
 
-trial['type'] = trial.apply(lambda row: credits(row), axis = 1)
+trial['type'] = trial.apply(lambda row: credits(row), axis=1)
 
-trial = trial[trial['type'] != 'credit'] #remove all credit notes, customers might have bought wrong combination
-trial = trial[trial['Quantity'].notnull()] #remove quantity with null value
+trial = trial[trial['type'] != 'credit']  # remove all credit notes, customers might have bought wrong combination
+trial = trial[trial['Quantity'].notnull()]  # remove quantity with null value
 
-
-
-
-
-
-products = trial[['Transaction Number',  'Product_num', 'Date']]
+products = trial[['Transaction Number', 'Product_num', 'Date']]
 
 products = products.drop_duplicates()
-#products = products.groupby('Transaction Number')
+# products = products.groupby('Transaction Number')
 
 
 import datetime
+
 products['Date'] = pd.to_datetime(products['Date'])
-products['Year'] = products['Date'].map(lambda i: i.strftime("%Y") )
+products['Year'] = products['Date'].map(lambda i: i.strftime("%Y"))
+
+# separate transactions into different years
+# pro_2016 = products[products['Year']  == '2016']      #year 2016
+# pro_2017 = products[products['Year']  == '2017']           #year 2017
+# pro_2018 = products[products['Year']  == '2018']       #year 2018
 
 
-#separate transactions into different years
-#pro_2016 = products[products['Year']  == '2016']      #year 2016
-#pro_2017 = products[products['Year']  == '2017']           #year 2017
-#pro_2018 = products[products['Year']  == '2018']       #year 2018
+pro_2K19_20 = products[
+    (products['Year'] == '2019') | (products['Year'] == '2020')].  # 2019 and 2020 combined for relevancy
 
-
-pro_2K19_20 = products[(products['Year']  == '2019') | (products['Year'] == '2020')].               #2019 and 2020 combined for relevancy
-
-
-#jj.iloc[:,0] = jj.iloc[:,0].map(transactions)
+# jj.iloc[:,0] = jj.iloc[:,0].map(transactions)
 freq_items = pro_2K19_20.groupby('Product_num').size().reset_index()
-freq_items =  freq_items.sort_values(by = 0, ascending = False)
+freq_items = freq_items.sort_values(by=0, ascending=False)
 
 
-def canon(row):                                                     #remove all labour and canon products
+def canon(row):  # remove all labour and canon products
     if str(row['Product_num'])[:3] == 'CAN':
         return 'yes'
     elif str(row['Product_num'])[:3] == 'LAB':
         return 'yes'
     else:
         return 'no'
-    
-    
-pro_2K19_20['canon'] = pro_2K19_20.apply(lambda row: canon(row), axis = 1)    
 
+
+pro_2K19_20['canon'] = pro_2K19_20.apply(lambda row: canon(row), axis=1)
 
 pro_2K19_20 = pro_2K19_20[pro_2K19_20['canon'] == 'no']
 
-pro_2K19_20 = pro_2K19_20.pivot(index = 'Transaction Number', columns = 'Product_num', values = 'Product_num')
-
+pro_2K19_20 = pro_2K19_20.pivot(index='Transaction Number', columns='Product_num', values='Product_num')
 
 transactions = []
-for i in range(0,17512):
-    transactions.append([str(pro_2K19_20.values[i,j]) for j in range(0,2181) if i != 'nan'])
-
+for i in range(0, 17512):
+    transactions.append([str(pro_2K19_20.values[i, j]) for j in range(0, 2181) if i != 'nan'])
 
 transactions = [list(set(i)) for i in transactions if i != 'nan']
 
-
-for i in transactions:  #for each list
-    for j in i:         #for each word in list
+for i in transactions:  # for each list
+    for j in i:  # for each word in list
         if j == 'nan':
             i.remove(j)
-   
 
-        
 from apyori import apriori
 
+rules = apriori(transactions, min_support=0.000384,  # beware of min_support
+                min_confidence=0.25,
+                min_lift=2,
+                min_length=3,
+                max_length=3)
 
-rules = apriori(transactions, min_support = 0.000384,  #beware of min_support
-                min_confidence = 0.25, 
-                min_lift = 2,
-                min_length = 3, 
-                max_length = 3)
-
-#min_support = itemsbought at least 0.000384 * 9338 transactions = about 3.5/transaction
+# min_support = itemsbought at least 0.000384 * 9338 transactions = about 3.5/transaction
 
 results = list(rules)
-
 
 
 def inspect(results):
@@ -149,12 +153,12 @@ def inspect(results):
     rhs = [tuple(result[2][0])[1] for result in results]
     supports = [result[1] for result in list(results)]
     confidence = [result[2][0][2] for result in list(results)]
-    lifts =  [result[2][0][3] for result in list(results)]
-    return list(zip(lhs,rhs,supports, confidence, lifts)) 
+    lifts = [result[2][0][3] for result in list(results)]
+    return list(zip(lhs, rhs, supports, confidence, lifts))
 
-  
-ar = pd.DataFrame(inspect(results), columns =['Left', 'Right', 'Support', 'Confidence', 'Lift'])
-ar = ar.sort_values(ascending = False, by = 'Confidence')
+
+ar = pd.DataFrame(inspect(results), columns=['Left', 'Right', 'Support', 'Confidence', 'Lift'])
+ar = ar.sort_values(ascending=False, by='Confidence')
 
 
 
