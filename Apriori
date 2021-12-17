@@ -11,6 +11,7 @@ import numpy as np
 
 data = pd.read_csv('allsales.csv')  # from january 2016
 
+# remove 'Customer Total'
 data = data[data['Year'] != 'Customer Total:']
 
 
