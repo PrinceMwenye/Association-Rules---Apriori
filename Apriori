@@ -15,7 +15,7 @@ data = pd.read_csv('allsales.csv')  # from january 2016
 data = data[data['Year'] != 'Customer Total:']
 
 
-def acc_num(row):
+def acc_num(row: str) -> str:
     """Retrieve account number from .Prd column.
 
     A function to get customer number from the .Prd column.
@@ -24,6 +24,7 @@ def acc_num(row):
     :precondition: row is a string in the dataset
     :postcondition: when iterating through 'row' column, it returns the customer account number from the .Prd column if the
                     data value is 'Customer Number'. Otherwise, it returns a NaN value later used for querying.
+    :postcondition: dataset is changed
 
     """
     if row['Year'] == 'Customer Number:':
@@ -35,7 +36,18 @@ def acc_num(row):
 data['acc_num'] = data.apply(lambda row: acc_num(row), axis=1)
 
 
-def acc_name(row):
+def acc_name(row: str) -> int:
+   """Retrieve account name from .Prd column.
+
+   A function to get customer name from the .Prd column.
+
+   :param row: a string representing a column name
+   :precondition: row is a string in the dataset
+   :postcondition: when iterating through 'row' column, it returns the customer account number from the .Prd column if the
+                   data value is 'Customer Number'. Otherwise, it returns a NaN value later used for querying.
+   :postcondition: dataset is changed
+
+    """
     if row['Year'] == 'Customer Number:':
         return row['Date']
     else:
@@ -45,7 +57,17 @@ def acc_name(row):
 data['Acc_name'] = data.apply(lambda row: acc_name(row), axis=1)
 
 
-def prod_name(row):
+def prod_name(row: str) -> str:
+    """Retrieve product number from .Prd column.
+
+   A function to get product number from the .Prd column. This works on the fact that if the row value's fourth character
+   is a '/', then value in '.Prd' must be a product name
+
+   :param row: a string representing a column name
+   :precondition: row is a string in the dataset
+   :postcondition: dataset is changed
+
+   """
     if str(row['Year'])[3:4] == '/':
         return row['Prd.']
     else:
@@ -56,6 +78,15 @@ data['Product_name'] = data.apply(lambda row: prod_name(row), axis=1)
 
 
 def prod_id(row):
+    """Retrieve product number from .Prd column.
+
+       A function to get product number from the .Prd column. This works on the fact that if the row value's fourth character
+       is a '/', then value in 'Year' must be a product name
+
+       :param row: a string representing a column name
+       :precondition: row is a string in the dataset
+       :postcondition: dataset is changed
+    """
     if str(row['Year'])[3:4] == '/':
         return row['Year']
     else:
@@ -64,6 +95,7 @@ def prod_id(row):
 
 data['Product_num'] = data.apply(lambda row: prod_id(row), axis=1)
 
+# forward fill with na values
 data.iloc[:, [-1, -2, -3, -4]] = data.iloc[:, [-1, -2, -3, -4]].fillna(method='ffill')
 
 trial = data[
@@ -73,6 +105,7 @@ trial = trial.drop(['Year', 'Prd.', 'Type', 'Cost of Sales', 'Percent'], axis=1)
 
 
 def credits(row):
+
     if str(row['Transaction Number'])[0:2] == 'CN':
         return 'credit'
     else:
