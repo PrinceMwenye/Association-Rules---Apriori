@@ -25,7 +25,6 @@ def acc_num(row):
     :postcondition: when iterating through 'row' column, it returns the customer account number from the .Prd column if the
                     data value is 'Customer Number'. Otherwise, it returns a NaN value later used for querying.
 
-
     """
     if row['Year'] == 'Customer Number:':
         return row['Prd.']
